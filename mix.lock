@@ -1,0 +1,6 @@
+%{
+  "espec": {:hex, :espec, "1.8.3", "b55e6e34fd8e64fe5e478fbb0ef94b10f976bb2088a7dfc4a1095f0cef55f113", [:mix], [{:meck, "~> 0.9", [hex: :meck, repo: "hexpm", optional: false]}], "hexpm", "c10e73e4ea0316e30c2066ba0292a810e017cb1a34fd76a7f803083c478d4288"},
+  "floki": {:hex, :floki, "0.32.0", "f915dc15258bc997d49be1f5ef7d3992f8834d6f5695270acad17b41f5bcc8e2", [:mix], [{:html_entities, "~> 0.5.0", [hex: :html_entities, repo: "hexpm", optional: false]}], "hexpm", "1c5a91cae1fd8931c26a4826b5e2372c284813904c8bacb468b5de39c7ececbd"},
+  "html_entities": {:hex, :html_entities, "0.5.2", "9e47e70598da7de2a9ff6af8758399251db6dbb7eebe2b013f2bbd2515895c3c", [:mix], [], "hexpm", "c53ba390403485615623b9531e97696f076ed415e8d8058b1dbaa28181f4fdcc"},
+  "meck": {:hex, :meck, "0.9.2", "85ccbab053f1db86c7ca240e9fc718170ee5bda03810a6292b5306bf31bae5f5", [:rebar3], [], "hexpm", "81344f561357dc40a8344afa53767c32669153355b626ea9fcbc8da6b3045826"},
+}
