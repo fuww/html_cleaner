@@ -120,19 +120,60 @@ defmodule HtmlCleaner do
     "rel"
   ]
 
-  defp remove_not_allowed_attributes(html) do
+  defp allowed_attribute?({"class", _}, %Regex{}) do
+    true
+  end
+
+  defp allowed_attribute?({key, _}, _) do
+    key in @allowed_attributes
+  end
+
+  defp remove_not_allowed_attributes(html, allowed_classes_regex) do
     html
     |> Floki.traverse_and_update(fn
       {name, attrs, children} ->
         {
           name,
-          attrs |> Enum.filter(fn {key, _} -> key in @allowed_attributes end),
+          attrs |> Enum.filter(&allowed_attribute?(&1, allowed_classes_regex)),
           children
         }
 
       other ->
         other
     end)
+  end
+
+  def remove_not_allowed_classes(html, %Regex{} = allowed_classes_regex) do
+    html
+    |> Floki.find_and_update("*[class]", fn
+      {name, attributes} ->
+        {name,
+         attributes
+         |> Enum.flat_map(fn
+           {"class", classes} ->
+             classes =
+               classes
+               |> String.split(" ", trim: true)
+               |> Enum.filter(&String.match?(&1, allowed_classes_regex))
+               |> Enum.join(" ")
+
+             if classes == "" do
+               []
+             else
+               [{"class", classes}]
+             end
+
+           {key, value} ->
+             {key, value}
+         end)}
+
+      other ->
+        other
+    end)
+  end
+
+  def remove_not_allowed_classes(html, _) do
+    html
   end
 
   def allowed_url?(url, %Regex{} = allowed_url_regex) do
@@ -184,11 +225,13 @@ defmodule HtmlCleaner do
   def clean_html(html, options) do
     allowed_url_regex = Keyword.get(options, :allowed_url_regex)
     allowed_elements = Keyword.get(options, :allowed_elements, [])
+    allowed_classes_regex = Keyword.get(options, :allowed_classes_regex, [])
 
     html
     |> filter_out_not_allowed_elements(allowed_elements)
     |> remove_elements_with_not_allowed_urls(allowed_url_regex)
-    |> remove_not_allowed_attributes()
+    |> remove_not_allowed_attributes(allowed_classes_regex)
+    |> remove_not_allowed_classes(allowed_classes_regex)
     |> filter_empty_lines()
     |> transform_anchors()
   end

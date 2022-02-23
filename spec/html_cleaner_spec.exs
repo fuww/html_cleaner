@@ -118,5 +118,22 @@ defmodule HtmlCleanerSpec do
         )
       end
     end
+
+    context "when allowed_classes_regex is specified" do
+      it "should allow certain urls" do
+        """
+        <div class=" something  otherthing "></div>
+        <div class=" totallydifferent "></div>
+        """
+        |> HtmlCleaner.clean_html(allowed_classes_regex: ~r/^something$/)
+        |> expect()
+        |> to(
+          eq("""
+          <div class="something"></div>\
+          <div></div>\
+          """)
+        )
+      end
+    end
   end
 end
