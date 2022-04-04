@@ -203,7 +203,7 @@ defmodule HtmlCleaner do
     end)
   end
 
-  defp minify_spaces(html) when is_binary(html) do
+  def minify_spaces(html) when is_binary(html) do
     html
     |> String.replace(~r/(\s*\n\s*)+/, "\n")
     |> String.replace(~r/[^\S\n]+/, " ")
