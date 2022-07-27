@@ -117,7 +117,8 @@ defmodule HtmlCleaner do
     "href",
     "src",
     "target",
-    "rel"
+    "rel",
+    "style"
   ]
 
   defp allowed_attribute?({"class", _}, %Regex{}) do
@@ -203,6 +204,49 @@ defmodule HtmlCleaner do
     end)
   end
 
+  defp filter_style_properties(_, []) do
+    ""
+  end
+
+  defp filter_style_properties(style, allowed_style_properties) do
+    style
+    |> String.split(";", trim: true)
+    |> Enum.flat_map(fn property_with_value ->
+      with [property, value] <- String.split(property_with_value, ":", trim: true),
+           true <- property in allowed_style_properties do
+        [Enum.join([property, value], ": ")]
+      else
+        _ -> []
+      end
+    end)
+    |> Enum.join("; ")
+  end
+
+  defp remove_not_allowed_inline_style_properties(html, allowed_style_properties) do
+    html
+    |> Floki.traverse_and_update(fn
+      {name, attrs, children} ->
+        {name,
+         attrs
+         |> Enum.flat_map(fn
+           {"style", value} ->
+             with true <- is_binary(value),
+                  style when style !== "" <-
+                    filter_style_properties(value, allowed_style_properties) do
+               [{"style", style}]
+             else
+               _ -> []
+             end
+
+           other ->
+             [other]
+         end), children}
+
+      other ->
+        other
+    end)
+  end
+
   def minify_spaces(html) when is_binary(html) do
     html
     |> String.replace(~r/(\s*\n\s*)+/, "\n")
@@ -226,12 +270,14 @@ defmodule HtmlCleaner do
     allowed_url_regex = Keyword.get(options, :allowed_url_regex)
     allowed_elements = Keyword.get(options, :allowed_elements, [])
     allowed_classes_regex = Keyword.get(options, :allowed_classes_regex, [])
+    allowed_inline_style_properties = Keyword.get(options, :allowed_inline_style_properties, [])
 
     html
     |> filter_out_not_allowed_elements(allowed_elements)
     |> remove_elements_with_not_allowed_urls(allowed_url_regex)
     |> remove_not_allowed_attributes(allowed_classes_regex)
     |> remove_not_allowed_classes(allowed_classes_regex)
+    |> remove_not_allowed_inline_style_properties(allowed_inline_style_properties)
     |> filter_empty_lines()
     |> transform_anchors()
   end

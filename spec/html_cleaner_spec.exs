@@ -135,5 +135,33 @@ defmodule HtmlCleanerSpec do
         )
       end
     end
+
+    context "when allowed_inline_style_properties" do
+      it "should allow inline style properties" do
+        """
+        <div style="text-align: center;">I am centered</div>
+        <div style="text-decoration: underline;">I am underlined</div>
+        <div style="text-decoration: underline; background-color: red;">I am underlined with red background</div>
+        <div style="color: yellow">I am yellow</div>
+        <div></div>
+        """
+        |> HtmlCleaner.clean_html(
+          allowed_inline_style_properties: [
+            "text-decoration",
+            "text-align"
+          ]
+        )
+        |> expect()
+        |> to(
+          eq("""
+          <div style="text-align: center">I am centered</div>\
+          <div style="text-decoration: underline">I am underlined</div>\
+          <div style="text-decoration: underline">I am underlined with red background</div>\
+          <div>I am yellow</div>\
+          <div></div>\
+          """)
+        )
+      end
+    end
   end
 end
