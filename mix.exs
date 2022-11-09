@@ -21,7 +21,7 @@ defmodule HtmlCleaner.MixProject do
 
   defp deps do
     [
-      {:floki, "~> 0.33.0"},
+      {:floki, "~> 0.34.0"},
       {:espec, "~> 1.8", only: [:dev, :test]}
     ]
   end
