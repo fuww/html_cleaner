@@ -119,6 +119,49 @@ defmodule HtmlCleanerSpec do
       end
     end
 
+    context "when an anchor href uses a scheme that is not allowed" do
+      for href <- [
+            "javascript:alert(1)",
+            "JavaScript:alert(1)",
+            " javascript:alert(1)",
+            "&#x01;javascript:alert(1)",
+            "java&#x09;script:alert(1)",
+            "java&#x0A;script:alert(1)",
+            "java&#x0D;script:alert(1)",
+            "data:text/html,<script>alert(1)</script>",
+            "vbscript:msgbox(1)"
+          ] do
+        it "should replace #{inspect(href)} with #" do
+          ~s(<a href="#{unquote(href)}">x</a>)
+          |> HtmlCleaner.clean_html()
+          |> expect()
+          |> to(eq(~s(<a target="_blank" rel="noopener noreferrer" href="#">x</a>)))
+        end
+      end
+    end
+
+    context "when an anchor href uses an allowed scheme or is relative" do
+      for href <- [
+            "https://example.com/jobs",
+            "HTTPS://example.com/jobs",
+            "http://example.com/jobs",
+            "mailto:jobs@example.com",
+            "tel:+31201234567",
+            "/jobs",
+            "jobs?page=2",
+            "#apply"
+          ] do
+        it "should keep #{inspect(href)}" do
+          ~s(<a href="#{unquote(href)}">x</a>)
+          |> HtmlCleaner.clean_html()
+          |> expect()
+          |> to(
+            eq(~s(<a target="_blank" rel="noopener noreferrer" href="#{unquote(href)}">x</a>))
+          )
+        end
+      end
+    end
+
     context "when allowed_classes_regex is specified" do
       it "should allow certain urls" do
         """

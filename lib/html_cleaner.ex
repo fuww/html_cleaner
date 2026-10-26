@@ -106,9 +106,21 @@ defmodule HtmlCleaner do
     |> Floki.filter_out("*:not(#{Enum.join(@allowed_elements ++ allowed_elements, ", ")})")
   end
 
+  @allowed_href_schemes [nil, "http", "https", "mailto", "tel"]
+
+  # Browsers strip leading C0 controls and spaces and drop tabs and newlines
+  # anywhere in a URL before reading its scheme.
+  defp allowed_href?(href) do
+    href
+    |> String.replace(~r/^[\x00-\x20]+|[\t\n\r]/, "")
+    |> URI.parse()
+    |> Map.fetch!(:scheme)
+    |> Kernel.in(@allowed_href_schemes)
+  end
+
   defp transform_anchors(html) do
     html
-    |> Floki.attr(~s(a[href^="javascript:"]), "href", fn _ -> "#" end)
+    |> Floki.attr("a[href]", "href", &if(allowed_href?(&1), do: &1, else: "#"))
     |> Floki.attr("a[href]", "rel", fn _ -> "noopener noreferrer" end)
     |> Floki.attr("a[href]", "target", fn _ -> "_blank" end)
   end
